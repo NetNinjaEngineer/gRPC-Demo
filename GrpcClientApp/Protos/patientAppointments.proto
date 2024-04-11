@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcService.Protos";
+
+service PatientAppointmentService {
+	rpc GetPatientAppointmentSummary (GetPatientAppointmentSummaryRequest) 
+		returns (stream GetPatientAppointmentSummaryResponse);
+}
+
+message GetPatientAppointmentSummaryRequest {
+}
+
+message GetPatientAppointmentSummaryResponse {
+	string patientName = 1;
+	int32 totalAppointments = 2;
+	string firstAppointment = 3;
+	string lastAppointment = 4; 
+}
