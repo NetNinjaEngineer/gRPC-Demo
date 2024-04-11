@@ -8,7 +8,7 @@ namespace GrpcClientApp
     {
         static async Task Main(string[] args)
         {
-            var channel = GrpcChannel.ForAddress("https://localhost:7181");
+            using var channel = GrpcChannel.ForAddress("https://localhost:7181");
             var client = new PatientAppointmentService.PatientAppointmentServiceClient(channel);
             var result = client.GetPatientAppointmentSummary(new GetPatientAppointmentSummaryRequest());
             var data = result.ResponseStream.ReadAllAsync();

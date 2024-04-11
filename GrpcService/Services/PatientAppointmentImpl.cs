@@ -18,8 +18,10 @@ namespace GrpcService.Services
             _logger = logger;
         }
 
-        public override async Task GetPatientAppointmentSummary(GetPatientAppointmentSummaryRequest request,
-            IServerStreamWriter<GetPatientAppointmentSummaryResponse> responseStream, ServerCallContext context)
+        public override async Task GetPatientAppointmentSummary(
+            GetPatientAppointmentSummaryRequest request,
+            IServerStreamWriter<GetPatientAppointmentSummaryResponse> responseStream,
+            ServerCallContext context)
         {
             var result = _context.Patients.GroupJoin(
                _context.Appointments,

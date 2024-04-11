@@ -1,3 +1,5 @@
+using Grpc.Api.Protos;
+
 namespace Grpc.Api
 {
     public class Program
@@ -9,8 +11,15 @@ namespace Grpc.Api
             // Add services to the container.
 
             builder.Services.AddControllers();
+
             builder.Services.AddEndpointsApiExplorer();
+
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddGrpcClient<PatientAppointmentService.PatientAppointmentServiceClient>(options =>
+            {
+                options.Address = new Uri(builder.Configuration.GetSection("GrpcUrl").Value!);
+            });
 
             var app = builder.Build();
 

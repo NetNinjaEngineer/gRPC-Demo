@@ -1,6 +1,5 @@
 ﻿using Grpc.Api.Protos;
 using Grpc.Core;
-using Grpc.Net.Client;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Grpc.Api.Controllers
@@ -9,35 +8,45 @@ namespace Grpc.Api.Controllers
     [ApiController]
     public class PatientsController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
         private readonly PatientAppointmentService.PatientAppointmentServiceClient _client;
 
-        public PatientsController(IConfiguration configuration)
+        public PatientsController(PatientAppointmentService.PatientAppointmentServiceClient client)
         {
-            _configuration = configuration;
-            var channel = GrpcChannel.ForAddress(_configuration!.GetSection("GrpcUrl").Value!);
-            _client = new PatientAppointmentService.PatientAppointmentServiceClient(channel);
+            _client = client;
         }
 
         [HttpGet("PatientAppointmentSummaries")]
         public async Task<IActionResult> GetPatientAppointmentSummaries()
         {
-            using var summary = _client.GetPatientAppointmentSummary(new GetPatientAppointmentSummaryRequest());
-
             var summaries = new List<PatientAppointment>();
 
-            var result = summary.ResponseStream.ReadAllAsync();
+            try
+            {
+                using var summary = _client.GetPatientAppointmentSummary(
+                    new GetPatientAppointmentSummaryRequest());
 
-            await foreach (var item in result)
-                summaries.Add(new PatientAppointment
-                {
-                    PatientName = item.PatientName,
-                    FirstAppointment = item.FirstAppointment,
-                    LastAppointment = item.LastAppointment,
-                    TotalAppointments = item.TotalAppointments
-                });
+                var result = summary.ResponseStream.ReadAllAsync();
 
-            return Ok(summaries);
+                await foreach (var item in result)
+                    summaries.Add(new PatientAppointment
+                    {
+                        PatientName = item.PatientName,
+                        FirstAppointment = item.FirstAppointment,
+                        LastAppointment = item.LastAppointment,
+                        TotalAppointments = item.TotalAppointments
+                    });
+
+                return Ok(summaries);
+            }
+            catch (RpcException ex) when (ex.StatusCode == Core.StatusCode.Cancelled)
+            {
+                return StatusCode((int)Core.StatusCode.Cancelled, "Stream cancelled.");
+            }
+            catch (RpcException ex)
+            {
+                return StatusCode((int)ex.StatusCode, ex.Status.Detail);
+            }
+
         }
     }
 }
